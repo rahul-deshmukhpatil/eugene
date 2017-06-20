@@ -1,0 +1,72 @@
+
+1> SecurityInfo
+	name: Full name with the space
+	symbol : symbol on the exchange
+	exchange : Name of exchange
+	exchange_id : exchange identifier
+	google_id : id on the google
+	tradable : Are we interested in this security
+	shares:	Total number of equity
+	EPS: Earnings per share
+	Dividend: Last Dividend
+	P/E ratio : 
+	mkt_cap :
+
+mktCap[4680000000.00], shares[142960000.00], netProfitMargin[-], operatingMargin[-], EDITDmargin[-], RO    AAmargin[-], ROAEmargin[-]
+
+create table securities(
+   symbol varchar2(20) not null
+ , exchange varchar2(20) not null
+ , mkt_cap varchar2(20)
+ , shares varchar2(20)
+ , PE varchar2(20)
+ , div_yeild varchar2(20)
+ , eps varchar2(20)
+ , net_profit_margin varchar2(20)
+ , operating_margin varchar2(20)
+ , ebit_margin varchar2(20)
+ , roaa_margin varchar2(20)
+ , roae_margin varchar2(20)
+ , constraint kcb_acc_pk primary key (symbol, exchange)
+);
+
+
+2> HLOC 
+	openPrice: opening trade price
+	openTime : time of open
+	closePrice: closing trade price
+	closeTime: time of close
+	quantityTraded: Quantity traded throughout day
+	DelieveredQuantity : Quantity Delievered.
+	avgQuantity: Average Quantity for 30 days
+	highPrice : high price during day
+	highPriceQuantity: Quantity traded till High Price achieved 
+	highTime : time of highest Price
+	lowPrice : low price during day
+	lowPriceQuantity: Quantity traded till Low Price achieved 
+	lowTime : time of low price 
+	
+
+3> Position Book
+	symbol:
+	buy/sell:
+	tradedQty:
+	tradePrice:
+	ltp:
+	
+	
+create table kcb_acc_tab(
+   accno varchar2(20) not null
+ , name varchar2(20) not null
+ , acctype char(1) not null -- missing size of column
+ , doo timestamp default sysdate not null -- missing not null
+ , bal number(7,2) not null
+ , constraint kcb_acc_pk primary key (accno)
+ , constraint kcb_name_ck check ( regexp_like(name, '[A-Z]', 'c' ) )
+ , constraint kcb_acctype_ck check ( acctype in ( 'S' ,'C' ,'R' ) )
+   -- acctype was spelled incorrectly. 
+ , constraint kcb_bal_ck check( ( acctype ='S' and bal >= 5000 ) 
+                             or ( acctype = 'C' and bal >= 10000 ) 
+                             or ( acctype ='R' and bal >= 5000 )
+                                ) -- this parenthesis was missing
+   )

@@ -1,0 +1,73 @@
+===================================
+Connect as dba
+rlwrap sqlplus  sys as sysdba
+
+===================================
+delete table 
+drop table security_info;
+
+===================================
+see all tables
+ select table_name from dba_tables;
+ select table_name from all_tables;
+ select table_name from user_tables;
+
+===================================
+insert into table
+	insert into temp (id, name) values (7, 'rahul');
+
+===================================
+
+write work into tables via sqlplus
+	commit work
+
+===================================
+
+python insert into tables:
+	import cx_Oracle
+	con = cx_Oracle.connect('eugene/rahul@127.0.0.1/XE')
+	print "Con version : %s " %(con.version)
+
+	rows = [ (1, "First" ),
+		(2, "Second" ),
+		(3, "Third" ),
+		(4, "Fourth" ),
+		(5, "Fifth" ),
+		(6, "Sixth" ),
+		(7, "Seventh" ) ] 
+
+	cur = con.cursor()
+	cur.bindarraysize = 7 
+
+	cur.setinputsizes(int, 20) 
+	cur.executemany("insert into temp(id, name) values (:1, :2)", rows)
+	con.commit()
+	
+	# Now query the results back
+	cur2 = con.cursor()
+		cur2.execute('select * from temp')
+	res = cur2.fetchall()
+		print res 
+
+		cur.close()
+		cur2.close()
+	con.close()
+
+===================================
+
+python update into tables:
+cursor.execute ("""
+	UPDATE tblTableName
+	SET Year=%s, Month=%s, Day=%s, Hour=%s, Minute=%s
+	WHERE Server=%s
+	""", (Year, Month, Day, Hour, Minute, ServerID))
+
+===================================
+
+python select from table:
+cur.execute('select * from securities')
+
+===================================
+
+delete all rows from table
+delete from mytest;
