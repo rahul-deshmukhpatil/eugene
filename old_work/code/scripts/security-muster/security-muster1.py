@@ -34,7 +34,6 @@ def getUrl(url):
 	page = response.read()
 	return page
 
-
 def parseGoogleData(data, key):
 	key=key + '\n'
 	found = [row for row in data if (row[0] == key)]    # 3
