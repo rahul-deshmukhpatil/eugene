@@ -35,4 +35,3 @@ def get_url(url):
 
 	#print(response.read())
 	return response.read()
-
