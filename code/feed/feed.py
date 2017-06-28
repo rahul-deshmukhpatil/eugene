@@ -41,7 +41,7 @@ def get_option_chain_for_expiry(symbol, expiry):
 	strikeMax = undSpot + STRIKE_SPREAD;
 
 	hist_data = []
-	hist_data.append(['STOCK', symbol, epoch, undSpot])
+	hist_data.append(['INDEX', symbol, epoch, undSpot])
 
 	index=1
 	for row in rows[2:-1]:

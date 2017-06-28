@@ -2,30 +2,27 @@
 
 from feed import *
 from marcopolo import *
+import time
 import sqlite3
 
-conn = sqlite3.connect('marcopolo')
+conn = sqlite3.connect('marcopolo.db')
 print "Opened database successfully";
 
 cursor=conn.cursor()
 print "Got cursor for the connection";
 
-hist_data=get_option_future_data()
-#cursor.execute('''CREATE TABLE simple1 
-#		(epoch INT NOT NULL,
-#		 bs INT NOT NULL,
-#		 bp REAL NOT NULL,
-#		 ap REAL NOT NULL,
-#		 ss INT NOT NULL,
-#		 lp REALNOT NULL,
-#		 vol INT NOT NULL,
-#		 total_buy INT NOT NULL,
-#		 total_sell INT NOT NULL,
-#		 oi INT NOT NULL
-#		);''')
+epoch_time = int(time.time())
 
-for row in hist_data:
-	publish_row_to_db(cursor, row)
-	conn.commit()
+while True:
+	print "Getting Data for %d" %(epoch_time)
+	hist_data=get_option_future_data()
+
+	for row in hist_data:
+		publish_row_to_db(cursor, row)
+		conn.commit()
+
+	epoch_time = int(time.time())
+	while(epoch_time % 120):
+		epoch_time = int(time.time())
 
 conn.close()
