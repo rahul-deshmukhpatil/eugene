@@ -1,0 +1,21 @@
+1> Test each strategy with most granular data first for maximum period of time
+	atleast six months with liquid and illiquid markets, ups and downs
+2> Execute each strategy with smallest amount first
+3> Always use basket order for the delta hedged strategies
+4> Automate the alerts to buy and sell. 
+5> buy/sell after movement gets stable 
+6> test each strategy
+
+Infra rules
+
+1> Check the limits and amounts first
+2> Always ensure that you have live connectivity
+3> Use AWS for the historical data base feed
+4> Find way to get more granular per second data
+5> Add IMPS and other details for every account and test 
+6> Have best internet connectivity
+
+Acccounting
+1> Make the excel for trades placed
+2> Check the transaction statements daily
+3> Invest only 80% capital

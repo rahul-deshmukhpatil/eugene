@@ -125,17 +125,20 @@ def get_futures_quote_for_expiry(symbol, expiry):
 	#logging.info('Response Quotes Dict Start:\n%s\nResponse End', quotesDict)
 	epoch=int(datetime.datetime.strptime(line['lastUpdateTime'], '%d-%b-%Y %H:%M:%S').strftime('%s'))
 
-	bs = int(futureDict['buyQuantity1'].replace(',',''))
-	bp = float(futureDict['buyPrice1'].replace(',',''))
-	sp = float(futureDict['sellPrice1'].replace(',',''))
-	ss = int(futureDict['sellQuantity1'].replace(',',''))
-	lastPrice = float(futureDict['lastPrice'].replace(',','')) 
-	vol = int(futureDict['numberOfContractsTraded'].replace(',',''))
-	total_buy = int(futureDict['totalBuyQuantity'].replace(',',''))
-	total_sell = int(futureDict['totalSellQuantity'].replace(',',''))
-	oi = int(futureDict['openInterest'].replace(',',''))
+	try:
+		bs = int(futureDict['buyQuantity1'].replace(',',''))
+		bp = float(futureDict['buyPrice1'].replace(',',''))
+		sp = float(futureDict['sellPrice1'].replace(',',''))
+		ss = int(futureDict['sellQuantity1'].replace(',',''))
+		lastPrice = float(futureDict['lastPrice'].replace(',','')) 
+		vol = int(futureDict['numberOfContractsTraded'].replace(',',''))
+		total_buy = int(futureDict['totalBuyQuantity'].replace(',',''))
+		total_sell = int(futureDict['totalSellQuantity'].replace(',',''))
+		oi = int(futureDict['openInterest'].replace(',',''))
+		hist_data.append(['FUTURE', symbol + '_' + expiry, epoch, bs, bp, sp, ss, lastPrice, vol, total_buy, total_sell, oi]);
+	except ValueError:
+		pass
 
-	hist_data.append(['FUTURE', symbol + '_' + expiry, epoch, bs, bp, sp, ss, lastPrice, vol, total_buy, total_sell, oi]);
 	return hist_data
 #}
 
