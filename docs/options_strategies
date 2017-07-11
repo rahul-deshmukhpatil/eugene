@@ -3,3 +3,11 @@
 
 2> Buy long 3/4 month after option and sell the current one
 
+3> Protective call:
+	Direction bearish strategy, Sell the underlying and buy the call option
+
+4> Protective call:
+	Direction bearish strategy, Sell the underlying and buy the call option
+
+5> Bank Nifty: If trend change happens
+	at 3pm : sell the bank nifty, buy the call option
