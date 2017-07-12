@@ -5,14 +5,14 @@ import datetime
 import sqlite3
 import csv
 
-conn = sqlite3.connect('marcopolo.db')
+conn = sqlite3.connect('../feed/marcopolo.db')
 print "Opened database successfully";
 
 cursor=conn.cursor()
 print "Got cursor for the connection";
 
 index='NIFTY'
-expiries = ['25AUG2016', '29SEP2016', '27OCT2016', '24NOV2016', '29DEC2016', '25JAN2017', '23FEB2017', '30MAR2017', '27APR2017', '25MAY2017', '29JUN2017', '27JUL2017', '25AUG2016']
+expiries = ['27JUL2017', '31AUG2017', '28SEP2017', '26OCT2017']
 
 for i in range(0, len(expiries)-2):
 #{
