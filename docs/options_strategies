@@ -11,3 +11,9 @@
 
 5> Bank Nifty: If trend change happens
 	at 3pm : sell the bank nifty, buy the call option
+	
+6> When market is range bound for lot of days, buy the virtical call and put spreads. Market will take some direction which will result into profit
+
+7> S-B-B for the options with more closer option  to spot (put or call) is sold and other two are bought.
+
+8> short strangle for the bank nifty, 10 Rs profit in a night

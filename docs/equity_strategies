@@ -1,2 +1,6 @@
 1> Protective put on intraday basis for more no of calls
 2> Protective put on long term basis
+3> Check the volumes traded. If they are high, that signifies the trend reversal
+	if low volume but price increased that means novice have purchased at high price
+	if price decreased but volume was high, that means exprienced are buying at low price
+	
