@@ -13,16 +13,19 @@ cursor=conn.cursor()
 print "Got cursor for the connection";
 
 index='NIFTY'
-expiries = ['27JUL2017']
+expiries = ['31AUG2017']
+indexExps = ['31AUG2017']
 index_tick=100
-days_to_test=40
+days_to_test=60
 
-index='BANKNIFTY'
-expiries = ['20JUL2017']
-index_tick=100
-days_to_test=10
+if False:
+	index='BANKNIFTY'
+	expiries = ['27JUL2017']
+	indexExps = ['27JUL2017']
+	index_tick=100
+	days_to_test=10
 
-for expiry in expiries:
+for expiry,indexExp in zip(expiries, indexExps):
 #{
 	#get the expiry day
 	expiryDate = datetime.datetime.strptime(expiry, '%d%b%Y')
@@ -38,8 +41,7 @@ for expiry in expiries:
  
 
 		#get the spot at 10
-		spotSymbol = index + '_' + expiry
-		spotSymbol = index + '_' + '27JUL2017' 
+		spotSymbol = index + '_' + indexExp 
 	
 		cursor.execute('''select ltp,epoch from %s where epoch > %d and epoch < %d;''' %(spotSymbol, nineFifteen, ten))
 

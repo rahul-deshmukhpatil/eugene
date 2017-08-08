@@ -16,4 +16,35 @@
 
 7> S-B-B for the options with more closer option  to spot (put or call) is sold and other two are bought.
 
-8> short strangle for the bank nifty, 10 Rs profit in a night
+8> short strangle for the bank nifty, with 200+/- points?, 10 Rs profit in a night 
+
+9> Sudden drift : Bank nifty has chopy edges, Set the stop loss orders, 
+	Buy 25000 put at  366
+	Spot is at 24600
+	Future is at 24705
+
+	Buy Future and  buy 25000 put. 
+			1> Stop loss orders for choppy increase is buy 1 lot at 24750(if sudden) upward drift occurs. That will make 2 lots of futures
+			2> Stop loss order for choppy downword moment is 2 lot future  sell at 24650. 1 lot future in net sell
+
+10> Overnight drift.
+	Upward drift, spot is at 24600
+		1> Buy put of 24800  at 170
+		2> Buy 1 lot of bank nifty  future at 24705
+	If sudden bull moment occurs, we will be in profit after 24800 crosses. If not, not much of losses
+	
+	Exactly opposite for Downard overnight drift, 
+		1> sell future at 24700
+		2> Buy call 24500 at 198. If sudden downword moment occurs we will be in profit.
+			This does not seem to be profitable, but try
+
+11> Unlimited downward profit strategy
+		Spot 24600
+		1> Buy put 25000 at 344
+		2> Buy put 25000 at 50
+		3> Buy future at 24700.
+
+		If it goes below 24500, unlimited profit, If futures is above 25000, we end up profit.
+
+		
+			
