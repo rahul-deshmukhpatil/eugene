@@ -47,4 +47,13 @@
 		If it goes below 24500, unlimited profit, If futures is above 25000, we end up profit.
 
 		
-			
+12> 2 Week to expiry. 2buy:1sell ratio trade
+		When 2 weeks time frames is 
+		
+		1> Buy 2 calls for 10100 at 53 each, sell 1 call at 10000 for 112
+		2> Buy 2 puts for 9900 at 29 each, sell one put at 10000 for 50
+
+		PnL
+			Max loss 100 Rs
+			Could be minimized. 
+
