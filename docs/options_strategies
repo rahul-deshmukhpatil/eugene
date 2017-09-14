@@ -59,3 +59,12 @@
 
 
 		specailly run this strategy for bank nifty with 100pt gap and lower single selling legs at spot
+
+13> BankNifty and Nifty co-relation
+		Sell 1 straddle at banknifty spot and buy 2 straddles at nifty50 spots.
+		In nuetral market this works best.
+		Do this with nifty options with selling at month, but selling straddle every week for banknifty 
+		keeping nifty50 straddle intact.
+
+
+
