@@ -66,5 +66,20 @@
 		Do this with nifty options with selling at month, but selling straddle every week for banknifty 
 		keeping nifty50 straddle intact.
 
+14> Bank nifty
+		Buy deep out of money options. with 20x returns if spot changes to the strike of option bought.
+		Generally nifty shifts 500 points. So appy a 500 pt spread. See the gains.
+		Another is SIP  of 1000 pt out of money options buying for next expiry. Gives sufficient momentum
+	
+15> Banknifty 1sell at stop: 1 buy at +100:2 buy at +200, buying in trending direction.
+
+16> On friday, in downtrending market, buy call option of spot strike, sell the next expiry same spot strike
+	It will either go down. premium diff will decrease and both will be out of money
+
+	Exactly opposite for uptrending market, buy current expiry spot strike put and sell put of next month.
+
+
+
+
 
 
