@@ -38,8 +38,6 @@ def run(cursor, strategy, start, end):
 		legBuySell = row[4]
 		legRatio = float(row[5])
 	
-		nse_expiry_fmt = (end_date - datetime.timedelta(1)).strftime('%-d%b%Y').upper()
-		spotSymbol = legUnderlying + '_' + nse_expiry_fmt
 
 		#logger.info('select ltp from %s where epoch > %d limit 1', spotSymbol, int(start_date.strftime('%s')))
 		cursor.execute('''select ltp from %s where epoch > %d limit 1''' %(legUnderlying, int(start_date.strftime('%s'))))
@@ -50,6 +48,7 @@ def run(cursor, strategy, start, end):
 		for row in rows:
 			spot = int((row[0] + 50)/100) * 100
 		
+		nse_expiry_fmt = eugene_expiries.nearest_expiry(legUnderlying, (end_date - datetime.timedelta(1))).strftime('%-d%b%Y').upper()
 		legSymbol = legUnderlying + '_' + nse_expiry_fmt + legCallPut + str(spot+legSpotDiff) 
 		legs.append([legSymbol, legBuySell, legRatio])
 

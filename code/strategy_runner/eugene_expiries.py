@@ -4,10 +4,28 @@ import logging
 
 logger = logging.getLogger(os.environ['logger'])
 
-def get_nearest_expiry(underlying, date):
+def nearest_expiry(underlying, date):
 	#get the nearest thursday
 	if(underlying == 'BANKNIFTY'):
-		return date
+		if(date.weekday() > 3):
+			date = date + datetime.timedelta(7-date.weekday()+3)
+			return date
+		else:
+			date = date + datetime.timedelta(3-date.weekday())
+			return date
+	else:
+		month_start, month_end = calendar.monthrange(date.year, date.month)
+		month_end = datetime.datetime(date.year, date.month, month_end)
+		if(month_end.weekday() >= 3):
+			month_end = month_end - datetime.timedelta(month_end.weekday()-3)
+		else:
+			month_end = month_end - datetime.timedelta(0-month_end.weekday()-4)
+
+		#date is after last thursay of month so go to next month
+		if(date > month_end):
+			return nearest_expiry(date + datetime.timedelta(7))
+		else:
+			return month_end
 
 def get_expiries(frequency, start_date, end_date):
 	start = datetime.datetime.strptime(start_date, '%d%b%Y')
