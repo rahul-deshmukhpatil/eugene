@@ -38,12 +38,11 @@ def run(cursor, strategy, start, end):
 		legBuySell = row[4]
 		legRatio = float(row[5])
 	
-		expiry_date = eugene_expiries.get_nearest_expiry(legUnderlying, end-datetime.timedelta(1));
-		nse_expiry_fmt = expiry_date.strftime('%-d%b%Y').upper()
+		nse_expiry_fmt = (end_date - datetime.timedelta(1)).strftime('%-d%b%Y').upper()
 		spotSymbol = legUnderlying + '_' + nse_expiry_fmt
 
 		#logger.info('select ltp from %s where epoch > %d limit 1', spotSymbol, int(start_date.strftime('%s')))
-		cursor.execute('''select ltp from %s where epoch > %d limit 1''' %(spotSymbol, int(start_date.strftime('%s'))))
+		cursor.execute('''select ltp from %s where epoch > %d limit 1''' %(legUnderlying, int(start_date.strftime('%s'))))
 	
 		#if spot exists
 		spot = 0
@@ -53,8 +52,6 @@ def run(cursor, strategy, start, end):
 		
 		legSymbol = legUnderlying + '_' + nse_expiry_fmt + legCallPut + str(spot+legSpotDiff) 
 		legs.append([legSymbol, legBuySell, legRatio])
-
-		logger.info('Getting strike for %s : %d', spotSymbol, spot+legSpotDiff)
 
 
 	sql = 'select ' + legs[0][0] + '.epoch' 
