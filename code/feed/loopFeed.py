@@ -25,4 +25,7 @@ while True:
 	while(epoch_time % 120):
 		epoch_time = int(time.time())
 
+	if os.path.exists('stop_loop.lck'):
+		break;
+
 conn.close()
