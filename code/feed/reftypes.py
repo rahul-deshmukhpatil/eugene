@@ -11,7 +11,7 @@ productSubTypes = {
 MAX_EXPIRIES=4
 
 #Fields to decide strikes to look for
-STRIKE_SPREAD=600
+STRIKE_SPREAD=2000
 #STRIKE_SPREAD_PERC=10
 
 #Call Fields

@@ -2,6 +2,7 @@ import os
 import logging
 import datetime  
 import csv 
+import time 
 
 import eugene_expiries
 
@@ -48,9 +49,11 @@ def run(cursor, strategy, start, end):
 		for row in rows:
 			spot = int((row[0] + 50)/100) * 100
 		
-		nse_expiry_fmt = eugene_expiries.nearest_expiry(legUnderlying, (end_date - datetime.timedelta(1))).strftime('%-d%b%Y').upper()
+		nse_expiry_fmt = eugene_expiries.nearest_expiry(legUnderlying, legExpiryIndex, (end_date - datetime.timedelta(1))).strftime('%-d%b%Y').upper()
 		legSymbol = legUnderlying + '_' + nse_expiry_fmt + legCallPut + str(spot+legSpotDiff) 
-		legs.append([legSymbol, legBuySell, legRatio])
+
+		legDetailedSymbol = legSymbol + '-' + legBuySell + '-' + str(legRatio)
+		legs.append([legSymbol, legBuySell, legRatio, legDetailedSymbol])
 
 
 	sql = 'select ' + legs[0][0] + '.epoch' 
@@ -65,6 +68,11 @@ def run(cursor, strategy, start, end):
 	sql += ' where ' + legs[0][0] + '.epoch > ' + str(start_date.strftime('%s')) + ' and ' + legs[0][0] + '.epoch < ' + str(end_date.strftime('%s'))
 	logger.info('SQL : %s', sql)
 
+	strategy_symbol = ''
+	underscore = ''
+	for leg in legs:
+		strategy_symbol += underscore + leg[3] 
+		underscore = '_'
 
 	cursor.execute(sql)
 	rows = cursor.fetchall()
@@ -74,6 +82,8 @@ def run(cursor, strategy, start, end):
 		sellPrice = 0.0
 		
 		legid = 1
+		
+		price_string = ''
 		for leg in legs:
 			#BUY the spread
 			#add price at which we could buy ie ap 
@@ -91,9 +101,11 @@ def run(cursor, strategy, start, end):
 			else:
 				sellPrice -= leg[2] * row[2*legid] 
 
+			price_string += ' [' + str(row[2*legid-1]) + ',' + str(row[2*legid]) + ']'
 			legid += 1
 	
-		logger.info('Strategy %d] bp %f , sp %f', row[0], buyPrice, sellPrice)
+		logger.info('%s %s - %d] %s', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0], price_string)
+		logger.info('%s %s] bp %f , sp %f', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), buyPrice, sellPrice)
 
 def runstrategy(cursor, strategy, frequency, expiries):
 	for expiry in expiries:
