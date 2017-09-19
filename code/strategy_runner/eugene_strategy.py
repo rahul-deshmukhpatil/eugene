@@ -21,16 +21,14 @@ def get_start_end(frequency, date):
 		else:
 			return date, date + datetime.timedelta(35)
 
-def run(cursor, strategy, start, end):
-	#@TODO: modify start according to the current expiry
-	start_date = start
-	#@TODO: modify end according to the current expiry
-	end_date = end
-
+def get_exact_leg_definions(cursor, strategy, start_date, end_date):
 	#get underlying 
 	strategy_file_handle = open(strategy, 'r')
 	legs = []
 	rows = csv.reader(strategy_file_handle)
+
+	underlyings = []
+
 	for row in rows:
 		legUnderlying = row[0]
 		legExpiryIndex = int(row[1])
@@ -38,7 +36,10 @@ def run(cursor, strategy, start, end):
 		legSpotDiff = int(row[3])
 		legBuySell = row[4]
 		legRatio = float(row[5])
-	
+
+		#add underlying to set
+		if legUnderlying not in underlyings:
+			underlyings.append(legUnderlying)
 
 		#logger.info('select ltp from %s where epoch > %d limit 1', spotSymbol, int(start_date.strftime('%s')))
 		cursor.execute('''select ltp from %s where epoch > %d limit 1''' %(legUnderlying, int(start_date.strftime('%s'))))
@@ -54,58 +55,96 @@ def run(cursor, strategy, start, end):
 
 		legDetailedSymbol = legSymbol + '-' + legBuySell + '-' + str(legRatio)
 		legs.append([legSymbol, legBuySell, legRatio, legDetailedSymbol])
+	
+	return legs, underlyings
 
+def get_sql_command(legs, underlyings, start_date, end_date):
+	base_underlying = underlyings[0]
+	sql = 'select ' + base_underlying + '.epoch, ' + base_underlying + '.ltp' 
 
-	sql = 'select ' + legs[0][0] + '.epoch' 
+	for underlying in underlyings[1:]:
+		sql += ', ' + underlying + '.ltp' 
+
 	for leg in legs:
 		sql += ', ' + leg[0] + '.bp, ' + leg[0] + '.ap'
 
-	sql += ' from ' + legs[0][0]
+	sql += ' from ' + base_underlying 
 
-	for leg in legs[1:]:
-		sql += ' inner join ' + leg[0] + ' on ' + leg[0] + '.epoch == ' + legs[0][0] + '.epoch'
+	for underlying in underlyings[1:]:
+		sql += ' inner join ' + underlying + ' on ' + base_underlying + '.epoch == ' + underlying + '.epoch'
 
-	sql += ' where ' + legs[0][0] + '.epoch > ' + str(start_date.strftime('%s')) + ' and ' + legs[0][0] + '.epoch < ' + str(end_date.strftime('%s'))
+	for leg in legs:
+		sql += ' inner join ' + leg[0] + ' on ' + base_underlying + '.epoch == ' + leg[0] + '.epoch'
+
+	sql += ' where ' + base_underlying + '.epoch > ' + str(start_date.strftime('%s')) + ' and ' + base_underlying + '.epoch < ' + str(end_date.strftime('%s'))
 	logger.info('SQL : %s', sql)
 
+	return sql
+
+def get_strategy_symbol(legs):
 	strategy_symbol = ''
 	underscore = ''
 	for leg in legs:
 		strategy_symbol += underscore + leg[3] 
 		underscore = '_'
 
-	cursor.execute(sql)
-	rows = cursor.fetchall()
+	return strategy_symbol
+
+def calculate_profit_loss(strategy_symbol, underlyings, legs, rows):
+	# Add 1 for epoch and no of underlyings to get first leg bp, ap
+	offset = 1 + len(underlyings)
 
 	for row in rows:
 		buyPrice = 0.0
 		sellPrice = 0.0
 		
-		legid = 1
+		legId = 0
+		underlyingId = 0
 		
 		price_string = ''
+		for underlying in underlyings:
+			price_string += underlying + ':[' + str(row[underlyingId + 1]) + '] '
+			underlyingId += 1
+
 		for leg in legs:
 			#BUY the spread
 			#add price at which we could buy ie ap 
 			#sub price at which we could sell ie bp 
 			if(leg[1] == 'B'):
-				buyPrice += leg[2] * row[2*legid] 
+				buyPrice += leg[2] * row[offset + 2*legId+1] 
 			else:
-				buyPrice -= leg[2] * row[2*legid-1] 
+				buyPrice -= leg[2] * row[offset + 2*legId] 
 
 			#SELL the spread
 			#add price at which we could sell ie bp 
 			#sub price at which we could buy ie ap 
 			if(leg[1] == 'B'):
-				sellPrice += leg[2] * row[2*legid-1] 
+				sellPrice += leg[2] * row[offset + 2*legId] 
 			else:
-				sellPrice -= leg[2] * row[2*legid] 
+				sellPrice -= leg[2] * row[offset + 2*legId + 1] 
 
-			price_string += ' [' + str(row[2*legid-1]) + ',' + str(row[2*legid]) + ']'
-			legid += 1
+			price_string += leg[0] + ':[' + str(row[offset + 2*legId]) + ',' + str(row[offset + 2*legId+1]) + ']'
+			legId += 1
 	
 		logger.info('%s %s - %d] %s', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0], price_string)
-		logger.info('%s %s] bp %f , sp %f', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), buyPrice, sellPrice)
+		logger.info('%s %s - %d] bp %f , sp %f', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0], buyPrice, sellPrice)
+
+def run(cursor, strategy, start, end):
+	#@TODO: modify start according to the current expiry
+	start_date = start
+	#@TODO: modify end according to the current expiry
+	end_date = end
+
+	legs, underlyings = get_exact_leg_definions(cursor, strategy, start, end) 
+
+	sql = get_sql_command(legs, underlyings, start_date, end_date)
+
+	strategy_symbol = get_strategy_symbol(legs)
+
+	cursor.execute(sql)
+	rows = cursor.fetchall()
+
+	calculate_profit_loss(strategy_symbol, underlyings, legs, rows)
 
 def runstrategy(cursor, strategy, frequency, expiries):
 	for expiry in expiries:
