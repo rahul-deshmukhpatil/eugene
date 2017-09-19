@@ -19,11 +19,11 @@ logger = logging.getLogger(os.environ['logger'])
 # start the main iterator function
 ######################################################################
 def main():
-	strategy, frequency, start_date, end_date = eugene_commandparser.parse_commandline() 
+	strategy, frequency, start_date, end_date, entry_delta, exit_delta = eugene_commandparser.parse_commandline() 
 	cursor=eugene_db.open_db()
 	expiries = eugene_expiries.get_expiries(frequency, start_date, end_date)
 
-	eugene_strategy.runstrategy(cursor, strategy, frequency, expiries)
+	eugene_strategy.runstrategy(cursor, strategy, frequency, expiries, entry_delta, exit_delta)
 
 
 # Ivoke the main

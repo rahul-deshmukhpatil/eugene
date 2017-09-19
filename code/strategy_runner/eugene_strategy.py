@@ -21,7 +21,7 @@ def get_start_end(frequency, date):
 		else:
 			return date, date + datetime.timedelta(35)
 
-def get_exact_leg_definions(cursor, strategy, start_date, end_date):
+def get_exact_leg_definions(cursor, strategy, start_date, end_date, entry_delta, exit_delta):
 	#get underlying 
 	strategy_file_handle = open(strategy, 'r')
 	legs = []
@@ -42,7 +42,12 @@ def get_exact_leg_definions(cursor, strategy, start_date, end_date):
 			underlyings.append(legUnderlying)
 
 		#logger.info('select ltp from %s where epoch > %d limit 1', spotSymbol, int(start_date.strftime('%s')))
-		cursor.execute('''select ltp from %s where epoch > %d limit 1''' %(legUnderlying, int(start_date.strftime('%s'))))
+		if(entry_delta):
+			entry_date = end_date - datetime.timedelta(entry_delta)
+		else:
+			entry_date = start_date
+
+		cursor.execute('''select ltp from %s where epoch > %d limit 1''' %(legUnderlying, int(entry_date.strftime('%s'))))
 	
 		#if spot exists
 		spot = 0
@@ -66,7 +71,7 @@ def get_exact_leg_definions(cursor, strategy, start_date, end_date):
 	
 	return legs, underlyings
 
-def get_sql_command(legs, underlyings, start_date, end_date):
+def get_sql_command(legs, underlyings, start_date, end_date, entry_delta, exit_delta):
 	base_underlying = underlyings[0]
 	sql = 'select ' + base_underlying + '.epoch, ' + base_underlying + '.ltp' 
 
@@ -84,7 +89,14 @@ def get_sql_command(legs, underlyings, start_date, end_date):
 	for leg in legs:
 		sql += ' inner join ' + leg[0] + ' on ' + base_underlying + '.epoch == ' + leg[0] + '.epoch'
 
-	sql += ' where ' + base_underlying + '.epoch > ' + str(start_date.strftime('%s')) + ' and ' + base_underlying + '.epoch < ' + str(end_date.strftime('%s'))
+	if(entry_delta):
+		entry_date = end_date - datetime.timedelta(entry_delta)
+	else:
+		entry_date = start_date
+
+	exit_date = end_date - datetime.timedelta(exit_delta)
+
+	sql += ' where ' + base_underlying + '.epoch > ' + str(entry_date.strftime('%s')) + ' and ' + base_underlying + '.epoch < ' + str(exit_date.strftime('%s'))
 	logger.info('SQL : %s', sql)
 
 	return sql
@@ -137,15 +149,15 @@ def calculate_profit_loss(strategy_symbol, underlyings, legs, rows):
 		logger.info('%s %s - %d] %s', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0], price_string)
 		logger.info('%s %s - %d] bp %f , sp %f', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0], buyPrice, sellPrice)
 
-def run(cursor, strategy, start, end):
+def run(cursor, strategy, start, end, entry_delta, exit_delta):
 	#@TODO: modify start according to the current expiry
 	start_date = start
 	#@TODO: modify end according to the current expiry
 	end_date = end
 
-	legs, underlyings = get_exact_leg_definions(cursor, strategy, start, end) 
+	legs, underlyings = get_exact_leg_definions(cursor, strategy, start, end, entry_delta, exit_delta) 
 
-	sql = get_sql_command(legs, underlyings, start_date, end_date)
+	sql = get_sql_command(legs, underlyings, start_date, end_date, entry_delta, exit_delta)
 
 	strategy_symbol = get_strategy_symbol(legs)
 
@@ -154,10 +166,10 @@ def run(cursor, strategy, start, end):
 
 	calculate_profit_loss(strategy_symbol, underlyings, legs, rows)
 
-def runstrategy(cursor, strategy, frequency, expiries):
+def runstrategy(cursor, strategy, frequency, expiries, entry_delta, exit_delta):
 	for expiry in expiries:
 		start, end = get_start_end(frequency, expiry)
 		logger.info('Running strat for %s - %s', start, end)
-		run(cursor, strategy, start, end)
+		run(cursor, strategy, start, end, entry_delta, exit_delta)
 			
 

@@ -13,12 +13,14 @@ def usage():
 	logger.error(" -f --frequency : frequnecy of running strategy daily, weekly, monthly")
 	logger.error(" -s --start : start date")
 	logger.error(" -e --end : end date")
+	logger.error(" -n --entry_delta : entry delta")
+	logger.error(" -x --exit_delta : exit delta")
 	logger.error(" ****************************************************************************")
 	sys.exit()
 
 def parse_commandline():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hf:s:e:c:", ["help", "frequency=", "start_date=", "end_date=", "config="])
+		opts, args = getopt.getopt(sys.argv[1:], "hf:s:e:c:n:x:", ["help", "frequency=", "start_date=", "end_date=", "config=", "entry_delta", "exit_delta"])
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print str(err)  # will print something like "option -a not recognized"
@@ -29,6 +31,9 @@ def parse_commandline():
 	frequency = ''
 	start_date = ''
 	end_date = ''
+	entry_delta = 0
+	exit_delta = 0
+	
 
 	for o, a in opts:
 		if o in ("-f", "--frequency"):
@@ -39,10 +44,19 @@ def parse_commandline():
 			start_date = a
 		elif o in ("-e", "--end_date"):
 			end_date = a
+		elif o in ("-n", "--entry_delta"):
+			entry_delta = int(a)
+		elif o in ("-x", "--exit_delta"):
+			exit_delta = int(a)
 		elif o in ("-h", "--help"):
 			usage()
 		else:
 			assert False, "unhandled option"
+
+
+	if entry_delta < exit_delta:
+		logger.error("entry_delta[%d] must be great than exit_delta[%d] !!!", entry_delta, exit_delta)
+		usage()
 
 	if not frequency :
 		logger.error("frequncy has not been provided with option -f !!!")
@@ -64,5 +78,5 @@ def parse_commandline():
 		logger.error("config file %s does not exists !!!", config)
 		usage()
 
-	return config, frequency, start_date, end_date
+	return config, frequency, start_date, end_date, entry_delta, exit_delta
 
