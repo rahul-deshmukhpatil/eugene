@@ -1,6 +1,7 @@
 import os 
 import datetime  
 import logging
+import calendar
 
 logger = logging.getLogger(os.environ['logger'])
 
@@ -26,11 +27,11 @@ def nearest_expiry(underlying, legExpiryIndex, date):
 		if(month_end.weekday() >= 3):
 			month_end = month_end - datetime.timedelta(month_end.weekday()-3)
 		else:
-			month_end = month_end - datetime.timedelta(0-month_end.weekday()-4)
+			month_end = month_end - datetime.timedelta(month_end.weekday()+4)
 
 		#date is after last thursday of month so go to next month
 		if(date > month_end):
-			expiry = nearest_expiry(date + datetime.timedelta(8))
+			expiry = nearest_expiry(underlying, legExpiryIndex, date + datetime.timedelta(8))
 		else:
 			expiry = month_end
 
