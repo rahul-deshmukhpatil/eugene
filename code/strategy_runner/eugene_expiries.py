@@ -12,11 +12,11 @@ logger = logging.getLogger(os.environ['logger'])
 #	legExpiryIndex : 0 = next expiry
 #					 1 = next to next expiry
 ###################################################
-def nearest_expiry(underlying, legExpiryIndex, date):
+def nearest_expiry(isOption, underlying, legExpiryIndex, date):
 	#get the nearest thursday
 	expiry = ''
 
-	if(underlying == 'BANKNIFTY'):
+	if isOption and underlying == 'BANKNIFTY':
 		if(date.weekday() > 3):
 			expiry = date + datetime.timedelta(7-date.weekday()+3)
 		else:
@@ -31,13 +31,13 @@ def nearest_expiry(underlying, legExpiryIndex, date):
 
 		#date is after last thursday of month so go to next month
 		if(date > month_end):
-			expiry = nearest_expiry(underlying, legExpiryIndex, date + datetime.timedelta(8))
+			expiry = nearest_expiry(isOption, underlying, legExpiryIndex, date + datetime.timedelta(8))
 		else:
 			expiry = month_end
 
 	#if legExpiryIndex is not 0, calculate the next expiry
 	if(legExpiryIndex > 0):
-		return nearest_expiry(underlying, legExpiryIndex-1, expiry + datetime.timedelta(1))
+		return nearest_expiry(isOption, underlying, legExpiryIndex-1, expiry + datetime.timedelta(1))
 	else:
 		return expiry
 

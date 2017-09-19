@@ -49,9 +49,17 @@ def get_exact_leg_definions(cursor, strategy, start_date, end_date):
 		rows = cursor.fetchall()
 		for row in rows:
 			spot = int((row[0] + 50)/100) * 100
-		
-		nse_expiry_fmt = eugene_expiries.nearest_expiry(legUnderlying, legExpiryIndex, (end_date - datetime.timedelta(1))).strftime('%-d%b%Y').upper()
-		legSymbol = legUnderlying + '_' + nse_expiry_fmt + legCallPut + str(spot+legSpotDiff) 
+
+		nse_expiry_fmt = ''
+		exact_spot = str(spot+legSpotDiff) 
+
+		if not legCallPut:
+			exact_spot = ''
+			nse_expiry_fmt = eugene_expiries.nearest_expiry(False, legUnderlying, legExpiryIndex, (end_date - datetime.timedelta(1))).strftime('%-d%b%Y').upper()
+		else:	
+			nse_expiry_fmt = eugene_expiries.nearest_expiry(True, legUnderlying, legExpiryIndex, (end_date - datetime.timedelta(1))).strftime('%-d%b%Y').upper()
+
+		legSymbol = legUnderlying + '_' + nse_expiry_fmt + legCallPut + exact_spot 
 
 		legDetailedSymbol = legSymbol + '-' + legBuySell + '-' + str(legRatio)
 		legs.append([legSymbol, legBuySell, legRatio, legDetailedSymbol])
