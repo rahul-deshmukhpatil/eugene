@@ -22,7 +22,7 @@ while True:
 		conn.commit()
 
 	epoch_time = int(time.time())
-	while(epoch_time % 120):
+	while(epoch_time % 60):
 		epoch_time = int(time.time())
 
 	if os.path.exists('stop_loop.lck'):

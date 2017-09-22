@@ -5,6 +5,7 @@ import csv
 import time 
 
 import eugene_expiries
+import eugene_exception
 
 logger = logging.getLogger(os.environ['logger'])
 
@@ -54,6 +55,9 @@ def get_exact_leg_definions(cursor, strategy, start_date, end_date, entry_delta,
 		rows = cursor.fetchall()
 		for row in rows:
 			spot = int((row[0] + 50)/100) * 100
+
+		if spot == 0:
+			raise NoSpotForDay(entry_date)
 
 		nse_expiry_fmt = ''
 		exact_spot = str(spot+legSpotDiff) 
@@ -146,8 +150,13 @@ def calculate_profit_loss(strategy_symbol, underlyings, legs, rows):
 			price_string += leg[0] + ':[' + str(row[offset + 2*legId]) + ',' + str(row[offset + 2*legId+1]) + ']'
 			legId += 1
 	
-		logger.info('%s %s - %d] %s', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0], price_string)
-		logger.info('%s %s - %d] bp %f , sp %f', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0], buyPrice, sellPrice)
+		logger.info('%s %s - %d]', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0])
+		logger.info('%s', price_string)
+		logger.info('====> %s] bp %f , sp %f', time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), buyPrice, sellPrice)
+		logger.info('')
+
+		#logger.info('%s %s - %d] %s', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0], price_string)
+		#logger.info('%s %s - %d] bp %f , sp %f', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0], buyPrice, sellPrice)
 
 def run(cursor, strategy, start, end, entry_delta, exit_delta):
 	#@TODO: modify start according to the current expiry
@@ -170,6 +179,10 @@ def runstrategy(cursor, strategy, frequency, expiries, entry_delta, exit_delta):
 	for expiry in expiries:
 		start, end = get_start_end(frequency, expiry)
 		logger.info('Running strat for %s - %s', start, end)
-		run(cursor, strategy, start, end, entry_delta, exit_delta)
-			
+		try:
+			run(cursor, strategy, start, end, entry_delta, exit_delta)
+		except eugene_exception.NoSpotForDay as ns:
+			logger.error('%s', ns.log())
+		except:
+			logger.error('UNKNOWN EXCPETION')
 
