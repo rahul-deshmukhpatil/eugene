@@ -2,4 +2,4 @@
 dirName=`dirname $0`
 cd $dirName
 cd ..
-git pull origin master
+git pull --no-edit origin master
