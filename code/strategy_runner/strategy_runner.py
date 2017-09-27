@@ -1,4 +1,4 @@
-#/bin/python
+#/bin/python -B
 import os
 import sys
 import logging
@@ -22,6 +22,7 @@ def main():
 	strategy, frequency, start_date, end_date, entry_delta, exit_delta = eugene_commandparser.parse_commandline() 
 	cursor=eugene_db.open_db()
 	expiries = eugene_expiries.get_expiries(frequency, start_date, end_date)
+	logger.info('Running strategy for Expiries : %s', expiries);
 
 	eugene_strategy.runstrategy(cursor, strategy, frequency, expiries, entry_delta, exit_delta)
 

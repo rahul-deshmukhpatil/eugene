@@ -45,9 +45,9 @@ def parse_commandline():
 		elif o in ("-e", "--end_date"):
 			end_date = a
 		elif o in ("-n", "--entry_delta"):
-			entry_delta = int(a)
+			entry_delta = float(a)
 		elif o in ("-x", "--exit_delta"):
-			exit_delta = int(a)
+			exit_delta = float(a)
 		elif o in ("-h", "--help"):
 			usage()
 		else:
