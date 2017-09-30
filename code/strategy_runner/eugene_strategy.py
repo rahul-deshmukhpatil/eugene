@@ -61,6 +61,8 @@ def get_exact_leg_definions(cursor, strategy, start_date, end_date, entry_delta,
 
 		nse_expiry_fmt = ''
 		exact_spot = str(spot+legSpotDiff) 
+		
+		logger.info("Entry Date %s, Spot is %d, SpotDelta is %d, exact spot %s", end_date, spot, legSpotDiff, exact_spot);
 
 		if not legCallPut:
 			exact_spot = ''
@@ -114,49 +116,54 @@ def get_strategy_symbol(legs):
 
 	return strategy_symbol
 
-def calculate_profit_loss(strategy_symbol, underlyings, legs, rows):
-	# Add 1 for epoch and no of underlyings to get first leg bp, ap
+def calculate_real_time_buy_sell_price(strategy_symbol, underlyings, legs, row):
 	offset = 1 + len(underlyings)
+	buyPrice = 0.0
+	sellPrice = 0.0
+	legId = 0
+	underlyingId = 0
+	price_string = ''
+
+	for underlying in underlyings:
+		price_string += underlying + ':[' + str(row[underlyingId + 1]) + '] '
+		underlyingId += 1
+
+
+	for leg in legs:
+		#BUY the spread
+		#add price at which we could buy ie ap 
+		#sub price at which we could sell ie bp 
+		if(leg[1] == 'B'):
+			buyPrice += leg[2] * row[offset + 2*legId+1] 
+		else:
+			buyPrice -= leg[2] * row[offset + 2*legId] 
+
+		#SELL the spread
+		#add price at which we could sell ie bp 
+		#sub price at which we could buy ie ap 
+		if(leg[1] == 'B'):
+			sellPrice += leg[2] * row[offset + 2*legId] 
+		else:
+			sellPrice -= leg[2] * row[offset + 2*legId + 1] 
+
+		price_string += leg[0] + ':[' + str(row[offset + 2*legId]) + ',' + str(row[offset + 2*legId+1]) + ']'
+		legId += 1
+	
+
+	return price_string, buyPrice, sellPrice
+	#logger.info('%s %s - %d] %s', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0], price_string)
+	#logger.info('%s %s - %d] bp %f , sp %f', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0], buyPrice, sellPrice)
+
+def calculate_buy_sell_price(strategy_symbol, underlyings, legs, rows):
+	# Add 1 for epoch and no of underlyings to get first leg bp, ap
 
 	for row in rows:
-		buyPrice = 0.0
-		sellPrice = 0.0
-		
-		legId = 0
-		underlyingId = 0
-		
-		price_string = ''
-		for underlying in underlyings:
-			price_string += underlying + ':[' + str(row[underlyingId + 1]) + '] '
-			underlyingId += 1
+		price_string, buyPrice, sellPrice = calculate_real_time_buy_sell_price(strategy_symbol, underlyings, legs, row)
 
-		for leg in legs:
-			#BUY the spread
-			#add price at which we could buy ie ap 
-			#sub price at which we could sell ie bp 
-			if(leg[1] == 'B'):
-				buyPrice += leg[2] * row[offset + 2*legId+1] 
-			else:
-				buyPrice -= leg[2] * row[offset + 2*legId] 
-
-			#SELL the spread
-			#add price at which we could sell ie bp 
-			#sub price at which we could buy ie ap 
-			if(leg[1] == 'B'):
-				sellPrice += leg[2] * row[offset + 2*legId] 
-			else:
-				sellPrice -= leg[2] * row[offset + 2*legId + 1] 
-
-			price_string += leg[0] + ':[' + str(row[offset + 2*legId]) + ',' + str(row[offset + 2*legId+1]) + ']'
-			legId += 1
-	
 		logger.info('%s %s - %d]', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0])
 		logger.info('%s', price_string)
 		logger.info('====> %s] bp %f , sp %f', time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), buyPrice, sellPrice)
 		logger.info('')
-
-		#logger.info('%s %s - %d] %s', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0], price_string)
-		#logger.info('%s %s - %d] bp %f , sp %f', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0], buyPrice, sellPrice)
 
 def run(cursor, strategy, start, end, entry_delta, exit_delta):
 	#@TODO: modify start according to the current expiry
@@ -173,7 +180,7 @@ def run(cursor, strategy, start, end, entry_delta, exit_delta):
 	cursor.execute(sql)
 	rows = cursor.fetchall()
 
-	calculate_profit_loss(strategy_symbol, underlyings, legs, rows)
+	calculate_buy_sell_price(strategy_symbol, underlyings, legs, rows)
 
 def runstrategy(cursor, strategy, frequency, expiries, entry_delta, exit_delta):
 	for expiry in expiries:
