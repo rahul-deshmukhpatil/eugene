@@ -9,6 +9,21 @@ import eugene_exception
 
 logger = logging.getLogger(os.environ['logger'])
 
+class Leg:
+	def __init__(self, legSymbol, bp, ap):
+		self.legSymbol = legSymbol 
+		self.bp = bp
+		self.sp = ap
+
+class StrategyPrice:
+		
+	def __init__(self, time='', epoch=0, components='', bp=1000000.0, ap=-1000000.0):
+		self.time = time 
+		self.epoch = epoch
+		self.components = components
+		self.bp = bp
+		self.sp = ap
+
 def get_start_end(frequency, date):
 	if(frequency == 'daily'):
 		return date, date + datetime.timedelta(1)
@@ -48,13 +63,19 @@ def get_exact_leg_definions(cursor, strategy, start_date, end_date, entry_delta,
 		else:
 			entry_date = start_date
 
-		cursor.execute('''select ltp from %s where epoch > %d limit 1''' %(legUnderlying, int(entry_date.strftime('%s'))))
+		sql = 'select ltp from ' +  legUnderlying + ' where epoch > '+ entry_date.strftime('%s') + ' limit 1'
+		logger.info('Getting Underlying, sql is %s', sql)
+		cursor.execute(sql)
 	
 		#if spot exists
 		spot = 0
-		rows = cursor.fetchall()
-		for row in rows:
-			spot = int((row[0] + 50)/100) * 100
+		rawspot = 0
+		rawspottime = 0
+		spotrows = cursor.fetchall()
+		for spotrow in spotrows:
+			spot = int((spotrow[0] + 50)/100) * 100
+			rawspot = int(spotrow[0])
+			break
 
 		if spot == 0:
 			raise NoSpotForDay(entry_date)
@@ -62,7 +83,7 @@ def get_exact_leg_definions(cursor, strategy, start_date, end_date, entry_delta,
 		nse_expiry_fmt = ''
 		exact_spot = str(spot+legSpotDiff) 
 		
-		logger.info("Entry Date %s, Spot is %d, SpotDelta is %d, exact spot %s", end_date, spot, legSpotDiff, exact_spot);
+		logger.info("Entry Date %s, raw sport %d, Spot is %d, SpotDelta is %d, exact spot %s", entry_date, rawspot, spot, legSpotDiff, exact_spot);
 
 		if not legCallPut:
 			exact_spot = ''
@@ -148,22 +169,43 @@ def calculate_real_time_buy_sell_price(strategy_symbol, underlyings, legs, row):
 
 		price_string += leg[0] + ':[' + str(row[offset + 2*legId]) + ',' + str(row[offset + 2*legId+1]) + ']'
 		legId += 1
-	
 
-	return price_string, buyPrice, sellPrice
-	#logger.info('%s %s - %d] %s', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0], price_string)
-	#logger.info('%s %s - %d] bp %f , sp %f', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0], buyPrice, sellPrice)
+	currTime = time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0]))
+	epoch = row[0]
+
+	return StrategyPrice(currTime, epoch, price_string, buyPrice, sellPrice)
 
 def calculate_buy_sell_price(strategy_symbol, underlyings, legs, rows):
 	# Add 1 for epoch and no of underlyings to get first leg bp, ap
+	entry_price = calculate_real_time_buy_sell_price(strategy_symbol, underlyings, legs, rows[0]) 
+	exit_price = calculate_real_time_buy_sell_price(strategy_symbol, underlyings, legs, rows[-1]) 
+
+	best_buy = StrategyPrice()
+	best_sell = StrategyPrice()
 
 	for row in rows:
-		price_string, buyPrice, sellPrice = calculate_real_time_buy_sell_price(strategy_symbol, underlyings, legs, row)
+		stratPrice = calculate_real_time_buy_sell_price(strategy_symbol, underlyings, legs, row)
 
-		logger.info('%s %s - %d]', strategy_symbol , time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), row[0])
-		logger.info('%s', price_string)
-		logger.info('====> %s] bp %f , sp %f', time.strftime("%Y/%m/%d, %H:%M:%S", time.localtime(row[0])), buyPrice, sellPrice)
+		logger.info('%s %s - %d]', strategy_symbol, stratPrice.time, stratPrice.epoch)
+		logger.info('%s', stratPrice.components)
+		logger.info('====> %s] bp %f , sp %f', stratPrice.time, stratPrice.bp, stratPrice.sp)
 		logger.info('')
+		if stratPrice.bp < best_buy.bp:
+			best_buy = stratPrice
+
+		if stratPrice.sp > best_sell.sp:
+			best_sell = stratPrice
+
+
+	logger.info('BEST_BUY %s %s - %d]', strategy_symbol, best_buy.time, best_buy.epoch)
+	logger.info('%s', best_buy.components)
+	logger.info('====> %s] bp %f , sp %f', best_buy.time, best_buy.bp, best_buy.sp)
+
+	logger.info('BEST SELL %s %s - %d]', strategy_symbol, stratPrice.time, stratPrice.epoch)
+	logger.info('%s', stratPrice.components)
+	logger.info('====> %s] bp %f , sp %f', stratPrice.time, stratPrice.bp, stratPrice.sp)
+
+	return entry_price, exit_price, best_buy, best_sell
 
 def run(cursor, strategy, start, end, entry_delta, exit_delta):
 	#@TODO: modify start according to the current expiry
@@ -180,16 +222,35 @@ def run(cursor, strategy, start, end, entry_delta, exit_delta):
 	cursor.execute(sql)
 	rows = cursor.fetchall()
 
-	calculate_buy_sell_price(strategy_symbol, underlyings, legs, rows)
+	return calculate_buy_sell_price(strategy_symbol, underlyings, legs, rows)
 
 def runstrategy(cursor, strategy, frequency, expiries, entry_delta, exit_delta):
+
+	total_buy = 0.0
+	total_sell = 0.0
+
+	total_best_buy = 0.0
+	total_best_sell = 0.0
+
 	for expiry in expiries:
 		start, end = get_start_end(frequency, expiry)
 		logger.info('Running strat for %s - %s', start, end)
 		try:
-			run(cursor, strategy, start, end, entry_delta, exit_delta)
+			entry_price, exit_price, best_buy, best_sell = run(cursor, strategy, start, end, entry_delta, exit_delta)
+
+			logger.info('Entry-Exit %s - %s', entry_price.time, exit_price.time)
+			logger.info('====> Entry[bp %f, sp %f], Exit[bp %f, sp %f] : %f', entry_price.bp, entry_price.sp, exit_price.bp, exit_price.sp, exit_price.sp - entry_price.bp)
+			logger.info('Best_buy-Best_sell %s - %s', best_buy.time, best_sell.time)
+			logger.info('====> Best_buy[bp %f, sp %f], Best_sell[bp %f, sp %f] : %f', best_buy.bp, best_buy.sp, best_sell.bp, best_sell.sp, best_sell.sp - best_buy.bp)
+
+			total_buy += entry_price.bp
+			total_sell += exit_price.sp
+
+			total_best_buy += best_buy.bp
+			total_best_sell += best_sell.sp
 		except eugene_exception.NoSpotForDay as ns:
 			logger.error('%s', ns.log())
 		except:
 			logger.error('UNKNOWN EXCPETION')
 
+	logger.info('Net bp %f - sp %f, best bp %f, best sell %f', total_buy, total_sell, total_best_buy, total_best_sell)
