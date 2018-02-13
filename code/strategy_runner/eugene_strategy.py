@@ -242,6 +242,10 @@ def runstrategy(cursor, strategy, frequency, expiries, entry_delta, exit_delta):
 			logger.info('====> Entry[bp %f, sp %f], Exit[bp %f, sp %f] : %f', entry_price.bp, entry_price.sp, exit_price.bp, exit_price.sp, exit_price.sp - entry_price.bp)
 			logger.info('Best_buy-Best_sell %s - %s', best_buy.time, best_sell.time)
 			logger.info('====> Best_buy[bp %f, sp %f], Best_sell[bp %f, sp %f] : %f', best_buy.bp, best_buy.sp, best_sell.bp, best_sell.sp, best_sell.sp - best_buy.bp)
+			logger.info('Entry Prices : %s', entry_price.components)
+			logger.info('Exit  Prices : %s', exit_price.components)
+			logger.info('Best_buy  Prices : %s', best_buy.components)
+			logger.info('Best_sell Prices : %s', best_sell.components)
 
 			total_buy += entry_price.bp
 			total_sell += exit_price.sp
