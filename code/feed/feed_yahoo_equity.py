@@ -3,6 +3,7 @@
 import sys 
 import json 
 import datetime  
+import time
 import logging
 import re 
 from bs4 import BeautifulSoup  
@@ -44,6 +45,7 @@ def get_symbol_data_from_yahoo(symbol):
 
 	hist_data[EUGENE_SEC_TYPE]	= 'STOCK'
 	hist_data[EUGENE_SYMBOL] 	= symbol 
+	hist_data[EUGENE_UPDATE] 	= 'TRADE' 
 	hist_data[EUGENE_EPOCH]		= 0
 
 	try:
@@ -53,10 +55,16 @@ def get_symbol_data_from_yahoo(symbol):
 		return hist_data
 
 	try:
-		hist_data[EUGENE_LTP] = stores[u'QuoteSummaryStore'] [u'financialData'] [u'currentPrice']['raw']
+		hist_data[EUGENE_LTP] = float(stores[u'QuoteSummaryStore'] [u'financialData'] [u'currentPrice']['raw'])
 	except:
-		hist_data[EUGENE_LTP] = stores[u'QuoteSummaryStore'] [u'price'] [u'regularMarketPrice']['raw']
+		try:
+			hist_data[EUGENE_LTP] = float(stores[u'QuoteSummaryStore'] [u'price'] [u'regularMarketPrice']['raw'])
+		except:
+			print "Hey This is wrong : Whats up %s" %symbol
+			hist_data[EUGENE_LTP] = 0.0 
+			return hist_data
 
+	hist_data[EUGENE_EPOCH]		= int(time.time())
 	print hist_data 
 	return hist_data
 #}
@@ -75,14 +83,11 @@ def get_yahoo_eqity_data(symbols):
 
 	#sys.exit(1)
 	mp = Pool(100)
-	mp.map(get_symbol_data_from_yahoo, symbols)
+	hist_data=mp.map(get_symbol_data_from_yahoo, symbols)
 	mp.close()
 	mp.join()
 	
 	return hist_data
-
-
-
 
 
 

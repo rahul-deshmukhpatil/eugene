@@ -77,14 +77,25 @@ if len(symbols) == 0:
 else:
 	print "Praying for symbosl %s" %(symbols)
 
+#Set previous volume for all symbols = 0
+prevVolume = {}
+for symbol in  symbols:
+	prevVolume[symbol] = 0	
+
 while True:
 	hist_data = []
 	hist_data=get_yahoo_eqity_data(symbols)
 
 	for row in hist_data:
-		#publish_row_to_db_yahoo_equity(cursor, row)
-		publish_row_to_db(cursor, row)
-		conn.commit()
+		#publish_row_to_db_yahoo_equity(cursor, row) if it has valid epoch
+		if(row[EUGENE_EPOCH] != 0):
+			#Subtract prev volume
+			temp = row[EUGENE_VOLUME]
+			row[EUGENE_VOLUME] -= prevVolume[row[EUGENE_SYMBOL]] 
+			prevVolume[row[EUGENE_SYMBOL]] = temp 
+			#print "Sending to db %s" %(row)
+			publish_row_to_db(cursor, row)
+			conn.commit()
 
 	epoch_time = int(time.time())
 	while(epoch_time % freqtime):
