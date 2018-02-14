@@ -78,8 +78,7 @@ def get_yahoo_eqity_data(symbols):
 	mp.map(get_symbol_data_from_yahoo, symbols)
 	mp.close()
 	mp.join()
-
-	sys.exit()
+	
 	return hist_data
 
 
@@ -107,7 +106,6 @@ def get_all_nse_symbols(url):
 			break
 		i = i + 1
 
-	print "Field is : %s" %(symbolFieldId)
 	for symbol in symbols_file:
 		symbols.append(symbol[symbolFieldId])
 	return symbols 
