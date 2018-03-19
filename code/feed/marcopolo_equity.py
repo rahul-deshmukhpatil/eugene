@@ -33,6 +33,29 @@ def publish_stock(cursor, row):
 		pass
 #}
 
+def publish_stock1(cursor, row):
+#{
+	#create table
+	try: 
+		cursor.execute('''CREATE TABLE IF NOT EXISTS %s 
+				(
+				 product TEXT NOT NULL,
+				 symbol TEXT NOT NULL,
+				 updateType TEXT NOT NULL,
+				);''' %(masterTable))
+	except:	
+		print "Could not create table : %s" %(masterTable)
+		pass
+	
+	try:
+		cursor.execute('''INSERT INTO %s
+			VALUES (%s, %s, %s)''' %(masterTable, row[EUGENE_SEC_TYPE], row[EUGENE_SYMBOL], row[EUGENE_UPDATE]))	
+	except:	
+		print "Could not insert into table %s: %s" %(masterTable, row)
+		pass
+#}
+
+
 
 def publish_row_to_db(cursor, row):
 #{
@@ -43,5 +66,5 @@ def publish_row_to_db(cursor, row):
 	elif row[0] == 'INDEX':
 		publish_index(cursor, row);
 	elif row[EUGENE_SEC_TYPE].upper() == 'STOCK':
-		publish_stock(cursor, row);
+		publish_stock1(cursor, row);
 #}
